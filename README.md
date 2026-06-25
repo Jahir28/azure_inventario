@@ -109,6 +109,14 @@ ACI_DNS_NAME
 AZURE_LOCATION
 ```
 
+### URL de API para el frontend
+
+El frontend se compila con:
+
+```text
+VITE_API_URL=http://azure-inventario-dev.eastus.azurecontainer.io:8000
+```
+
 ### Backend remoto de Terraform
 
 Terraform guarda el estado compartido en Azure Storage:

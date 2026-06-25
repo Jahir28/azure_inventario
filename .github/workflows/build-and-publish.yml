@@ -44,7 +44,7 @@ jobs:
         working-directory: frontend
         run: npm run build
         env:
-          VITE_API_URL: http://${{ vars.ACI_DNS_NAME }}.${{ vars.AZURE_LOCATION }}.azurecontainer.io:8000
+          VITE_API_URL: http://azure-inventario-dev.eastus.azurecontainer.io:8000
 
       - name: Login to Azure Container Registry
         uses: docker/login-action@v3
@@ -63,7 +63,7 @@ jobs:
       - name: Build frontend image
         run: |
           docker build \
-            --build-arg VITE_API_URL=http://${{ vars.ACI_DNS_NAME }}.${{ vars.AZURE_LOCATION }}.azurecontainer.io:8000 \
+            --build-arg VITE_API_URL=http://azure-inventario-dev.eastus.azurecontainer.io:8000 \
             -t ${{ secrets.ACR_LOGIN_SERVER }}/azure-inventario-frontend:latest \
             -t ${{ secrets.ACR_LOGIN_SERVER }}/azure-inventario-frontend:${{ steps.meta.outputs.sha_short }} \
             ./frontend
