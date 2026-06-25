@@ -1,0 +1,28 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Datos
+data/
+*.db
+
+# Python
+backend/.venv/
+
+# Node
+frontend/node_modules/
+frontend/dist/
+
+# Variables de entorno
+.env
+
+# Terraform
+.terraform/
+terraform/.terraform/
+*.tfstate
+*.tfstate.backup
+
+# Editor / SO
+.vscode/
+.DS_Store
+Thumbs.db

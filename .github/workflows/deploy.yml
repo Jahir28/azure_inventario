@@ -1,0 +1,66 @@
+name: Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: "Docker image tag to deploy"
+        required: true
+        default: "latest"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: terraform
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Azure login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform init
+        run: terraform init
+
+      - name: Terraform apply
+        run: |
+          terraform apply -auto-approve \
+            -var="deploy_container_group=true" \
+            -var="backend_image=${{ secrets.ACR_LOGIN_SERVER }}/azure-inventario-backend:${{ github.event.inputs.image_tag }}" \
+            -var="frontend_image=${{ secrets.ACR_LOGIN_SERVER }}/azure-inventario-frontend:${{ github.event.inputs.image_tag }}"
+        env:
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Get Terraform outputs
+        id: tf_outputs
+        run: |
+          echo "frontend_url=$(terraform output -raw frontend_url)" >> "$GITHUB_OUTPUT"
+          echo "backend_health_url=$(terraform output -raw backend_health_url)" >> "$GITHUB_OUTPUT"
+          echo "swagger_url=$(terraform output -raw swagger_url)" >> "$GITHUB_OUTPUT"
+
+      - name: Validate backend health
+        run: |
+          for attempt in {1..12}; do
+            if curl --fail "${{ steps.tf_outputs.outputs.backend_health_url }}"; then
+              exit 0
+            fi
+            sleep 10
+          done
+
+          echo "Backend health check failed."
+          exit 1
+
+      - name: Show final URLs
+        run: |
+          echo "Frontend: ${{ steps.tf_outputs.outputs.frontend_url }}"
+          echo "Backend health: ${{ steps.tf_outputs.outputs.backend_health_url }}"
+          echo "Swagger: ${{ steps.tf_outputs.outputs.swagger_url }}"
