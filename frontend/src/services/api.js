@@ -1,8 +1,7 @@
-const defaultApiUrl = `${window.location.protocol}//${window.location.hostname}:8000`
-const API_URL = import.meta.env.VITE_API_URL || defaultApiUrl
+const API_URL = import.meta.env.VITE_API_URL || ''
 
 async function request(path, options = {}) {
-  // VITE_API_URL permite sobrescribir la API; por defecto usa el mismo host y puerto 8000.
+  // Por defecto usa rutas relativas para que Nginx reenvíe /api al backend.
   const response = await fetch(`${API_URL}${path}`, {
     headers: {
       'Content-Type': 'application/json',
