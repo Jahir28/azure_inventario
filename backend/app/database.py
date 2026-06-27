@@ -6,6 +6,7 @@ DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./data/inventory.db")
 
 
 def get_database_path() -> Path:
+    # El proyecto usa SQLite para evitar costos y mantener simple el despliegue.
     if not DATABASE_URL.startswith("sqlite:///"):
         raise ValueError("Only SQLite database URLs are supported.")
 
@@ -14,6 +15,7 @@ def get_database_path() -> Path:
 
 def get_connection() -> sqlite3.Connection:
     db_path = get_database_path()
+    # En Docker, la base queda dentro de /app/data o en el volumen local configurado.
     db_path.parent.mkdir(parents=True, exist_ok=True)
     connection = sqlite3.connect(db_path)
     connection.row_factory = sqlite3.Row
@@ -24,6 +26,7 @@ def get_connection() -> sqlite3.Connection:
 def init_db() -> None:
     """Create the local SQLite schema when the API starts."""
     with get_connection() as connection:
+        # Crea la tabla automáticamente para que el contenedor sea demostrable al iniciar.
         connection.execute(
             """
             CREATE TABLE IF NOT EXISTS products (

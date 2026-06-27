@@ -86,6 +86,35 @@ El proyecto usa tres pipelines:
 - `build-and-publish.yml`: construye backend, frontend e imágenes Docker, y publica en ACR.
 - `deploy.yml`: actualiza Azure Container Instances usando Terraform con la imagen seleccionada.
 
+## Estado actual del proyecto
+
+El proyecto ya cuenta con la estructura principal necesaria para la entrega académica:
+
+- Backend FastAPI funcional.
+- Frontend Vue 3 funcional.
+- Dockerfiles para backend y frontend.
+- Docker Compose para ejecución local.
+- Terraform para infraestructura en Azure.
+- Tres pipelines de GitHub Actions.
+- Despliegue en Azure Container Instances.
+
+La documentación final y las evidencias deben mantenerse actualizadas con capturas reales de GitHub Actions y Azure Portal.
+
+### Flujo de actualización
+
+Si se modifica el frontend, backend o configuración del proyecto, el cambio debe subirse a GitHub para que los pipelines lo usen:
+
+```text
+Cambios locales
+Commit
+Push a GitHub
+Build and Publish
+Deploy
+Validación en Azure
+```
+
+Los cambios que solo existen en la máquina local no son visibles para GitHub Actions.
+
 ### Secrets requeridos
 
 Configurar en GitHub Repository Settings > Secrets and variables > Actions:
@@ -117,6 +146,26 @@ El frontend se compila con:
 VITE_API_URL=http://azure-inventario-dev.eastus.azurecontainer.io:8000
 ```
 
+### Acceso público
+
+La aplicación se accede por HTTP:
+
+```text
+http://azure-inventario-dev.eastus.azurecontainer.io
+```
+
+El uso de HTTP se mantiene para evitar recursos adicionales con costo como Application Gateway o Front Door.
+
+### Backend público
+
+El backend está disponible en el puerto 8000 para facilitar la validación de la API:
+
+```text
+http://azure-inventario-dev.eastus.azurecontainer.io:8000
+```
+
+Para producción, el backend debería protegerse detrás de una red privada, gateway o proxy con HTTPS. Para este proyecto académico se mantiene público porque la asignación solicita una URL de acceso a la aplicación y no exige HTTPS.
+
 ### Backend remoto de Terraform
 
 Terraform guarda el estado compartido en Azure Storage:
@@ -134,3 +183,14 @@ Después de configurar el backend remoto se debe ejecutar:
 cd terraform
 terraform init
 ```
+
+## Nota sobre el entorno local
+
+En esta máquina, las herramientas como Docker, Terraform y Azure CLI pueden estar disponibles desde la terminal de Windows y no necesariamente desde WSL Ubuntu.
+
+Eso es válido siempre que:
+
+- Docker funcione desde Windows.
+- Terraform pueda ejecutarse desde Windows.
+- Azure CLI esté autenticado desde Windows.
+- Los pipelines de GitHub Actions ejecuten correctamente el flujo completo.

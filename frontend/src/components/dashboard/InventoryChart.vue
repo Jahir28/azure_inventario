@@ -1,6 +1,5 @@
 <script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import * as echarts from 'echarts'
 
 const props = defineProps({
   metrics: {
@@ -10,6 +9,7 @@ const props = defineProps({
 })
 
 const chartElement = ref(null)
+let echarts = null
 let chart = null
 
 const chartData = computed(() => [
@@ -18,8 +18,30 @@ const chartData = computed(() => [
   { value: props.metrics.out_of_stock_products, name: 'Agotado' }
 ])
 
-function renderChart() {
+async function loadEcharts() {
+  if (!echarts) {
+    // Solo se cargan los módulos necesarios para el gráfico de pastel.
+    const [
+      { init, use },
+      { PieChart },
+      { LegendComponent, TooltipComponent },
+      { CanvasRenderer }
+    ] = await Promise.all([
+      import('echarts/core'),
+      import('echarts/charts'),
+      import('echarts/components'),
+      import('echarts/renderers')
+    ])
+
+    use([PieChart, LegendComponent, TooltipComponent, CanvasRenderer])
+    echarts = { init }
+  }
+}
+
+async function renderChart() {
   if (!chartElement.value) return
+
+  await loadEcharts()
 
   if (!chart) {
     chart = echarts.init(chartElement.value)
@@ -60,11 +82,13 @@ function resizeChart() {
 
 onMounted(async () => {
   await nextTick()
-  renderChart()
+  await renderChart()
   window.addEventListener('resize', resizeChart)
 })
 
-watch(chartData, renderChart, { deep: true })
+watch(chartData, () => {
+  void renderChart()
+}, { deep: true })
 
 onBeforeUnmount(() => {
   window.removeEventListener('resize', resizeChart)

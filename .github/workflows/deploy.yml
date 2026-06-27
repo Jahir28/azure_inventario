@@ -1,5 +1,6 @@
 name: Deploy
 
+# Pipeline 3: despliega en Azure Container Instances una imagen ya publicada en ACR.
 on:
   workflow_dispatch:
     inputs:
@@ -32,6 +33,7 @@ jobs:
         run: terraform init
 
       - name: Terraform apply
+        # Activa el Container Group y selecciona las imágenes indicadas por tag.
         run: |
           terraform apply -auto-approve \
             -var="deploy_container_group=true" \
@@ -42,12 +44,14 @@ jobs:
 
       - name: Get Terraform outputs
         id: tf_outputs
+        # Las salidas permiten validar y mostrar las URLs finales del despliegue.
         run: |
           echo "frontend_url=$(terraform output -raw frontend_url)" >> "$GITHUB_OUTPUT"
           echo "backend_health_url=$(terraform output -raw backend_health_url)" >> "$GITHUB_OUTPUT"
           echo "swagger_url=$(terraform output -raw swagger_url)" >> "$GITHUB_OUTPUT"
 
       - name: Validate backend health
+        # Confirma que el backend responde antes de dar el despliegue por exitoso.
         run: |
           for attempt in {1..12}; do
             if curl --fail "${{ steps.tf_outputs.outputs.backend_health_url }}"; then

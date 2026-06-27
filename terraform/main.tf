@@ -1,4 +1,5 @@
 locals {
+  # Azure Container Registry exige nombres sin guiones y en minúscula.
   normalized_name = replace(lower(var.project_name), "-", "")
   common_tags = {
     project     = var.project_name
@@ -31,6 +32,7 @@ resource "azurerm_subnet" "aci" {
     name = "aci-delegation"
 
     service_delegation {
+      # La delegación permite ejecutar Azure Container Instances dentro de esta subnet.
       name    = "Microsoft.ContainerInstance/containerGroups"
       actions = ["Microsoft.Network/virtualNetworks/subnets/action"]
     }
@@ -42,11 +44,13 @@ resource "azurerm_container_registry" "main" {
   resource_group_name = azurerm_resource_group.main.name
   location            = azurerm_resource_group.main.location
   sku                 = "Basic"
-  admin_enabled       = true
-  tags                = local.common_tags
+  # Se habilita admin para que ACI pueda descargar imágenes privadas del ACR.
+  admin_enabled = true
+  tags          = local.common_tags
 }
 
 resource "azurerm_container_group" "main" {
+  # Pipeline Infrastructure crea la base; Pipeline Deploy activa el Container Group.
   count = var.deploy_container_group ? 1 : 0
 
   name                = "aci-${var.project_name}-${var.environment}"
@@ -54,9 +58,10 @@ resource "azurerm_container_group" "main" {
   resource_group_name = azurerm_resource_group.main.name
   os_type             = "Linux"
   ip_address_type     = "Public"
-  dns_name_label      = "${var.project_name}-${var.environment}"
-  restart_policy      = "Always"
-  tags                = local.common_tags
+  # El FQDN público cumple el entregable de URL de acceso sin agregar recursos costosos.
+  dns_name_label = "${var.project_name}-${var.environment}"
+  restart_policy = "Always"
+  tags           = local.common_tags
 
   image_registry_credential {
     server   = azurerm_container_registry.main.login_server
@@ -65,6 +70,7 @@ resource "azurerm_container_group" "main" {
   }
 
   container {
+    # Backend FastAPI: expone API REST, Swagger y /health.
     name   = "backend"
     image  = var.backend_image
     cpu    = var.container_cpu
@@ -81,6 +87,7 @@ resource "azurerm_container_group" "main" {
   }
 
   container {
+    # Frontend Vue compilado y servido con Nginx.
     name   = "frontend"
     image  = var.frontend_image
     cpu    = var.container_cpu

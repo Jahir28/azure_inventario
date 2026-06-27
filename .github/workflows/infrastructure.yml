@@ -1,5 +1,6 @@
 name: Infrastructure
 
+# Pipeline 1: valida y crea la infraestructura base con Terraform.
 on:
   workflow_dispatch:
     inputs:
@@ -42,11 +43,13 @@ jobs:
         run: terraform validate
 
       - name: Terraform plan
+        # La infraestructura base se crea sin desplegar contenedores todavía.
         run: terraform plan -out=tfplan -var="deploy_container_group=false"
         env:
           ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       - name: Terraform apply
+        # El apply queda protegido por una entrada manual para evitar cambios accidentales.
         if: ${{ github.event.inputs.apply == 'true' }}
         run: terraform apply -auto-approve tfplan
         env:

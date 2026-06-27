@@ -1,6 +1,8 @@
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+const defaultApiUrl = `${window.location.protocol}//${window.location.hostname}:8000`
+const API_URL = import.meta.env.VITE_API_URL || defaultApiUrl
 
 async function request(path, options = {}) {
+  // VITE_API_URL permite sobrescribir la API; por defecto usa el mismo host y puerto 8000.
   const response = await fetch(`${API_URL}${path}`, {
     headers: {
       'Content-Type': 'application/json',
@@ -15,6 +17,7 @@ async function request(path, options = {}) {
   }
 
   if (response.status === 204) {
+    // Las eliminaciones exitosas no devuelven cuerpo.
     return null
   }
 

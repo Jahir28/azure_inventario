@@ -15,6 +15,7 @@ def calculate_status(quantity: int) -> ProductStatus:
 
 
 def map_product(row: Row) -> Product:
+    # El estado no se guarda en la tabla; se calcula desde el stock para evitar duplicidad.
     return Product(
         id=row["id"],
         name=row["name"],
@@ -62,6 +63,7 @@ def update_product(product_id: int, payload: ProductUpdate) -> Product | None:
     if current is None:
         return None
 
+    # Solo se actualizan los campos enviados por el frontend.
     data = payload.model_dump(exclude_unset=True, exclude_none=True)
     updated = current.model_dump()
     updated.update(data)
@@ -94,6 +96,7 @@ def delete_product(product_id: int) -> bool:
 
 def get_metrics() -> InventoryMetrics:
     products = list_products()
+    # Estas métricas alimentan las tarjetas del dashboard.
     return InventoryMetrics(
         total_products=len(products),
         available_products=sum(1 for product in products if product.status == ProductStatus.AVAILABLE),

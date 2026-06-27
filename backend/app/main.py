@@ -9,6 +9,7 @@ from app.routes.product_routes import router as product_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Inicializa la base SQLite al arrancar el contenedor del backend.
     init_db()
     yield
 
@@ -32,6 +33,7 @@ app.add_middleware(
 
 @app.get("/health", tags=["health"])
 def health_check() -> dict[str, str]:
+    # GitHub Actions usa este endpoint para confirmar que el despliegue responde.
     return {"status": "ok"}
 
 
